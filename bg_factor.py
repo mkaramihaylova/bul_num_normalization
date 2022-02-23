@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-"""Simple number name grammar for (American) English, to 10 million (exclusive).
-This is loosely based on approach used by:
-Sproat, R. 1996. Multilingual text analysis for text-to-speech synthesis.
-Natural Language Engineering, 2(4): 369-380
-"""
+""" Bulgarian cardinal number factorization grammar """
 
 import string
 
@@ -13,17 +9,23 @@ from pynini.lib import pynutil
 from pynini.lib import rewrite
 
 
-# Inventories.
-
 _digit = pynini.union(*string.digits)
-# Powers of ten that have single-word representations in English. E1*
-# is a special symbol we will use in the teens below.
-_powers = pynini.union("[E1]", "[E1*]", "[E2]", "[E3]", "[E6]")
+# Powers of ten that have single-word representations in Bulgarian. E1*
+# is a special symbol used in the teens below.
+_powers = pynini.union("[E1]", "[E1*]", "[E2]", "[E3]", "[E6]", "[E9]", "[E12]")
 _sigma_star = pynini.union(_digit, _powers).closure().optimize()
 
 # Inserts factors in the appropriate place in the digit sequence.
 _raw_factorizer = (
     _digit
+    + pynutil.insert("[E6]")
+    + _digit
+    + pynutil.insert("[E3]")
+    + _digit
+    + pynutil.insert("[E2]")
+    + _digit
+    + pynutil.insert("[E1]")
+    + _digit
     + pynutil.insert("[E6]")
     + _digit
     + pynutil.insert("[E2]")
@@ -85,7 +87,7 @@ _lambda = pynini.string_map(
         ("3[E1]", "тридесет"),
         ("4[E1]", "четиридесет"),
         ("5[E1]", "петдесет"),
-        ("6[E1]", "шестдесет"),
+        ("6[E1]", "шейсет"),
         ("7[E1]", "седемдесет"),
         ("8[E1]", "осемдесет"),
         ("9[E1]", "деветдесет"),
@@ -99,16 +101,12 @@ _lambda = pynini.string_map(
         ("8[E2]", "осемстотин"),
         ("9[E2]", "деветстотин"),
         ("[E3]", "хиляди"),
-        ("[E6]", "милиона")
+        ("[E6]", "милиона"),
+        ("[E9]", "милиарда"),
+        ("[E12]", "трилиона")
     ]
 ).optimize()
 _lambda_star = pynutil.join(_lambda, pynutil.insert(" ")).optimize()
 
-
 def number(token: str) -> str:
     return rewrite.one_top_rewrite(token, _phi @ _lambda_star)
-
-
-print(number("2"))
-
-VERBALIZE = _phi @ _lambda_star
